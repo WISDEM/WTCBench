@@ -30,7 +30,7 @@ def load_testbench_yaml(filename):
 def main():
 
 
-    input_file = 'testbench_options_lite.yaml'
+    input_file = 'testbench_options_lite_5MW.yaml'
     testbench_options = load_testbench_yaml(os.path.join(this_dir,input_file))
 
     #### NOTHING BELOW HERE SHOULD CHANGE FOR THE USER
@@ -86,12 +86,13 @@ def main():
     OFmgmt['write_stdout'] = testbench_options['OpenFAST'].get('write_stdout', False)
     
     # Controller inputs
-    if 'path2dll' in testbench_options['Controller']:
+    if testbench_options['Controller'] is not None and 'path2dll' in testbench_options['Controller']:
         OFmgmt['path2dll'] = testbench_options['Controller']['path2dll']
     else:
         logger.warning('No path2dll specified in testbench_options.yaml. Using default rosco path to dll.')
+        OFmgmt['path2dll'] = discon_lib_path
 
-    if 'DISCON_in' in testbench_options['Controller']:
+    if testbench_options['Controller'] is not None and 'DISCON_in' in testbench_options['Controller']:
         OFmgmt['DISCON_in'] = testbench_options['Controller']['DISCON_in']
         OFmgmt['DISCON_in'] = os.path.join(os.path.dirname(modopt_file), OFmgmt['DISCON_in'])
         if not os.path.isfile(OFmgmt['DISCON_in']):
@@ -145,7 +146,8 @@ def main():
     # Make FASTLoadCases
     if rank == 0:
         logging.info('Running controller testbench with input file: %s', input_file)
-        logger.info('Using DISCON_in: %s', OFmgmt['DISCON_in'])
+        if 'DISCON_in' in OFmgmt:
+            logger.info('Using DISCON_in: %s', OFmgmt['DISCON_in'])
         sys.stdout.flush()
         flc = FASTLoadCases()
         flc.options['modeling_options'] = testbench_options

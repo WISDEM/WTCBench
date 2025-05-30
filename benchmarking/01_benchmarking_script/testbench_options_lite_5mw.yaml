@@ -1,17 +1,17 @@
 Testbench_Options:
-    output_directory: outputs/24_simp_openfast_opts
+    output_directory: outputs/1_5mw
     n_cores: 1  # (Optional) Number of cores to use for mulit-processing, MPI cores will be determined automatically
     # FAST_exe: /projects/weis/dzalkind/openfast-versions/openfast-main/build/glue-codes/openfast/openfast
     # turbsim_exe: /projects/weis/dzalkind/openfast-versions/openfast-main/build/modules/turbsim/turbsim
 
 
 Controller:
-    path2dll: /Users/dzalkind/Tools/ROSCO-PRC/rosco/controller/build/libdiscon.dylib   # dev
-    DISCON_in: /Users/dzalkind/Tools/ROSCO-PRC/Examples/Test_Cases/NREL-5MW/DISCON_power_boost.IN
+    # path2dll: rosco    # /Users/dzalkind/Tools/ROSCO-PRC/rosco/controller/build/libdiscon.dylib   # dev
+    # DISCON_in: /Users/dzalkind/Tools/ROSCO-PRC/Examples/Test_Cases/NREL-5MW/DISCON_power_boost.IN
 
 OpenFAST: 
     openfast_file: NREL-5MW.fst
-    openfast_dir: /Users/dzalkind/Tools/ROSCO-main/Examples/Test_Cases/NREL-5MW/
+    openfast_dir: ../00_OpenFAST_Models/NREL-5MW
 
 PostProcessing:
     binning_time: 20
