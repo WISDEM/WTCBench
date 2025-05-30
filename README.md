@@ -1,37 +1,12 @@
-# WEIS
+# WTCBench
 
 [![Coverage Status](https://coveralls.io/repos/github/WISDEM/WEIS/badge.svg?branch=develop)](https://coveralls.io/github/WISDEM/WEIS?branch=develop)
 [![Actions Status](https://github.com/WISDEM/WEIS/workflows/CI_WEIS/badge.svg?branch=develop)](https://github.com/WISDEM/WEIS/actions)
 [![Documentation Status](https://readthedocs.org/projects/weis/badge/?version=develop)](https://weis.readthedocs.io/en/develop/?badge=develop)
 [![DOI](https://zenodo.org/badge/289320573.svg)](https://zenodo.org/badge/latestdoi/289320573)
 
-WEIS, Wind Energy with Integrated Servo-control, performs multifidelity co-design of wind turbines. WEIS is a framework that combines multiple NREL-developed tools to enable design optimization of floating offshore wind turbines.
+WTCBench is a fork of the [WEIS](https://github.com/WISDEM/WEIS) repository, focused on controller benchmarking and performance.
 
-Author: [NREL WISDEM & OpenFAST & Control Teams](mailto:systems.engineering@nrel.gov)
-
-## Documentation
-
-See local documentation in the `docs`-directory or access the online version at <https://weis.readthedocs.io/en/latest/>
-
-## Packages
-
-WEIS integrates in a unique workflow four models:
-* [WISDEM](https://github.com/WISDEM/WISDEM) is a set of models for assessing overall wind plant cost of energy (COE).
-* [OpenFAST](https://github.com/OpenFAST/openfast) is the community model for wind turbine simulation to be developed and used by research laboratories, academia, and industry.
-* [TurbSim](https://www.nrel.gov/docs/fy09osti/46198.pdf) is a stochastic, full-field, turbulent-wind simulator.
-* [ROSCO](https://github.com/NREL/ROSCO) provides an open, modular and fully adaptable baseline wind turbine controller to the scientific community.
-
-In addition, three external libraries are added:
-* [pCrunch](https://github.com/NREL/pCrunch) is a collection of tools to ease the process of parsing large amounts of OpenFAST output data and conduct loads analysis.
-* [pyOptSparse](https://github.com/mdolab/pyoptsparse) is a framework for formulating and efficiently solving nonlinear constrained optimization problems.
-
-The core WEIS modules are:
- * _aeroelasticse_ is a wrapper to call [OpenFAST](https://github.com/OpenFAST/openfast)
- * _control_ contains the routines calling [ROSCO](https://github.com/NREL/ROSCO) and the routines supporting distributed aerodynamic control devices, such trailing edge flaps
- * _gluecode_ contains the scripts glueing together all models and libraries
- * _multifidelity_ contains the codes to run multifidelity design optimizations
- * _optimization_drivers_ contains various optimization drivers
- * _schema_ contains the YAML files and corresponding schemas representing the input files to WEIS
 
 ## Installation
 
