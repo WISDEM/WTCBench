@@ -1,5 +1,5 @@
 Testbench_Options:
-    output_directory: outputs/24_check_eog_steady
+    output_directory: outputs/0_setup
     n_cores: 6  # (Optional) Number of cores to use for mulit-processing, MPI cores will be determined automatically
     # FAST_exe: /projects/weis/dzalkind/openfast-versions/openfast-main/build/glue-codes/openfast/openfast
     # turbsim_exe: /projects/weis/dzalkind/openfast-versions/openfast-main/build/modules/turbsim/turbsim
@@ -10,9 +10,9 @@ Controller:
     DISCON_in: /Users/dzalkind/Tools/WEIS-DLC/examples/01_aeroelasticse/OpenFAST_models/IEA-15-240-RWT/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_DISCON.IN
 
 OpenFAST: 
-    regulation_trajectory: ../02_run_openfast_cases/IEA-15-240-RWT-outputs.yaml  # (Optional) for setting initial conditions
+    regulation_trajectory: ../00_OpenFAST_Models/IEA-15-240-RWT/IEA-15-240-RWT/IEA-15-240-RWT-outputs.yaml  # (Optional) for setting initial conditions
     openfast_file: IEA-15-240-RWT-UMaineSemi.fst
-    openfast_dir: ../01_aeroelasticse/OpenFAST_models/IEA-15-240-RWT/IEA-15-240-RWT-UMaineSemi
+    openfast_dir: ../00_OpenFAST_Models/IEA-15-240-RWT/IEA-15-240-RWT-UMaineSemi
     write_stdout: True  # (Optional) Write OpenFAST stdout to file, default is False
 
 PostProcessing:
@@ -55,11 +55,11 @@ DLC_driver:
         wave_height50: 9.7
         wave_period50: 13.6
     DLCs:
-        # - DLC: "1.1"
-        #   n_seeds: 1
-        #   wind_speed: [8,15]
-        #   analysis_time: 100.
-        #   transient_time: 0.0
+        - DLC: "1.1"
+          n_seeds: 1
+          wind_speed: [8,15]
+          analysis_time: 1.
+          transient_time: 0.0
         # - DLC: "1.3"
         #   n_seeds: 2
         #   analysis_time: 1.
@@ -83,12 +83,12 @@ DLC_driver:
         #   seeds: 6
         #   TI_factor: 0.5
         #   wind_speed: [12,14]
-        - DLC: "Steady"
-          wind_speed: [5,11.4,17]
-          analysis_time: 400.
-        - DLC: "Gust"   # EOG gust at rated wind speed
-          IEC_WindType: 'EOG'
-          wind_speed: [5,11.4,17]
+        # - DLC: "Steady"
+        #   wind_speed: [5,11.4,17]
+        #   analysis_time: 400.
+        # - DLC: "Gust"   # EOG gust at rated wind speed
+        #   IEC_WindType: 'EOG'
+        #   wind_speed: [5,11.4,17]
         # - DLC: "Ramp"  # Up
         #   wind_speed: [10]
         #   n_seeds: 1
