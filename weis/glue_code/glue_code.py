@@ -22,8 +22,6 @@ from wisdem.glue_code.gc_RunTools import Convergence_Trends_Opt
 from weis.glue_code.gc_RunTools import Outputs_2_Screen
 from weis.frequency.raft_wrapper import RAFT_WEIS
 from weis.control.tmd import TMD_group
-from rosco.toolbox.inputs.validation import load_rosco_yaml
-from wisdem.inputs import load_yaml
 from wisdem.commonse.cylinder_member import get_nfull
 
 
@@ -130,7 +128,7 @@ class WindPark(om.Group):
                 self.connect('rotorse.rp.powercurve.rated_Q',          'sse_tune.tune_rosco.rated_torque')
                 
                 self.connect("blade.high_level_blade_props.r_blade",  "sse_tune.r")
-                self.connect("blade.high_level_blade_props.rotor_radius", "sse_tune.Rtip")
+                self.connect("blade.high_level_blade_props.Rtip", "sse_tune.Rtip")
                 self.connect('hub.radius',                     'sse_tune.Rhub')
                 self.connect("high_level_tower_props.hub_height", "sse_tune.hub_height")
                 self.connect('hub.cone',                       'sse_tune.precone')
@@ -158,7 +156,7 @@ class WindPark(om.Group):
                 self.connect('configuration.rated_power',       'sse_tune.rated_power')
 
                 self.connect('nacelle.gear_ratio',              'sse_tune.tune_rosco.gear_ratio')
-                self.connect("blade.high_level_blade_props.rotor_radius", "sse_tune.tune_rosco.R")
+                self.connect("blade.high_level_blade_props.Rtip", "sse_tune.tune_rosco.R")
                 self.connect('rotorse.I_all_blades',            'sse_tune.tune_rosco.rotor_inertia', src_indices=[0])
                 self.connect('rotorse.rs.frame.flap_mode_freqs','sse_tune.tune_rosco.flap_freq', src_indices=[0])
                 self.connect('rotorse.rs.frame.edge_mode_freqs','sse_tune.tune_rosco.edge_freq', src_indices=[0])
@@ -231,16 +229,11 @@ class WindPark(om.Group):
             n_span = modeling_options["WISDEM"]["RotorSE"]["n_span"]
             self.connect('configuration.turb_class',        'raft.turbulence_class')
             self.connect('configuration.ws_class' ,         'raft.turbine_class')
-            self.connect('drivese.rna_mass', 'raft.turbine_mRNA')
-            self.connect('drivese.rna_I_TT', 'raft.rna_I_TT')
-            self.connect('drivese.rna_cm', 'raft.rna_cm')
+            self.connect("configuration.rotor_orientation", "raft.rotor_orientation")
+
+            self.connect("high_level_tower_props.hub_height", "raft.turbine_hHub")
             self.connect("nacelle.overhang", "raft.turbine_overhang")
             self.connect("nacelle.distance_tt_hub", "raft.drive_height")
-            self.connect('drivese.base_F', 'raft.turbine_Fthrust', src_indices=[0], flat_src_indices=True) # TODO: Multiple DLCs
-            self.connect("high_level_tower_props.hub_height", "raft.turbine_hHub")
-            self.connect("tower.layer_thickness", "raft.tower_layer_thickness")
-            self.connect("tower_grid.s", "raft.turbine_tower_stations")
-            self.connect('tower.diameter', 'raft.turbine_tower_d')
             self.connect('env.water_depth', 'raft.mooring_water_depth')
             self.connect('env.rho_water', 'raft.rho_water')
             self.connect('env.rho_air', 'raft.rho_air')
@@ -252,19 +245,29 @@ class WindPark(om.Group):
             self.connect('sse_tune.tune_rosco.Fl_Kp',           'raft.Fl_Kp')
             self.connect('sse_tune.tune_rosco.VS_Kp',           'raft.rotor_TC_VS_Kp')
             self.connect('sse_tune.tune_rosco.VS_Ki',           'raft.rotor_TC_VS_Ki')
-            self.connect('rotorse.I_all_blades',     'raft.rotor_inertia', src_indices=[0])
-            self.connect('rotorse.rp.powercurve.rated_V',       'raft.Vrated')
             self.connect('control.V_in',                    'raft.V_cutin')
             self.connect('control.V_out',                   'raft.V_cutout')
-            self.connect('rotorse.rp.powercurve.rated_Omega',     'raft.rated_rotor_speed')
+            
+            if modeling_options["flags"]["nacelle"]:
+                self.connect('drivese.rna_mass', 'raft.turbine_mRNA')
+                self.connect('drivese.rna_I_TT', 'raft.rna_I_TT')
+                self.connect('drivese.rna_cm', 'raft.rna_cm')
+                self.connect('drivese.base_F', 'raft.turbine_Fthrust', src_indices=[0], flat_src_indices=True) # TODO: Multiple DLCs
+            else:
+                self.connect('drivese.above_yaw_mass', 'raft.turbine_mRNA')
+                self.connect('drivese.above_yaw_I_TT', 'raft.rna_I_TT')
+                self.connect('drivese.above_yaw_cm', 'raft.rna_cm')
 
             if modeling_options["flags"]["blade"]:
+                self.connect('rotorse.I_all_blades',     'raft.rotor_inertia', src_indices=[0])
+                self.connect('rotorse.rp.powercurve.rated_V',       'raft.Vrated')
+                self.connect('rotorse.rp.powercurve.rated_Omega',     'raft.rated_rotor_speed')
                 self.connect("configuration.n_blades", "raft.nBlades")
                 self.connect("hub.cone", "raft.precone")
                 self.connect("nacelle.uptilt", "raft.tilt")
                 self.connect("nacelle.gear_ratio", "raft.gear_ratio")
                 self.connect("blade.high_level_blade_props.r_blade",  "raft.blade_r")
-                self.connect("blade.high_level_blade_props.rotor_radius", "raft.blade_Rtip")
+                self.connect("blade.high_level_blade_props.Rtip", "raft.blade_Rtip")
                 self.connect("hub.radius", "raft.hub_radius")
                 self.connect("blade.pa.chord_param", "raft.blade_chord")
                 self.connect("blade.pa.twist_param", "raft.blade_theta")
@@ -285,6 +288,9 @@ class WindPark(om.Group):
                 self.connect("rotorse.rp.powercurve.pitch", "raft.rotor_powercurve_pitch")
 
             if modeling_options["flags"]["tower"]:
+                self.connect("tower.layer_thickness", "raft.tower_layer_thickness")
+                self.connect("tower_grid.s", "raft.turbine_tower_stations")
+                self.connect('tower.diameter', 'raft.turbine_tower_d')
                 self.connect('towerse.member.rho', 'raft.tower_rho')
                 self.connect('towerse.tower_section_height', 'raft.tower_section_height')
                 self.connect('towerse.member.tor_stff', 'raft.tower_torsional_stiffness')
@@ -348,7 +354,7 @@ class WindPark(om.Group):
             self.add_subsystem('aeroelastic',       FASTLoadCases(modeling_options = modeling_options, opt_options = opt_options))
             self.add_subsystem('stall_check_of',    NoStallConstraint(modeling_options = modeling_options))
             
-            if modeling_options['WISDEM']['RotorSE']['flag']: 
+            if modeling_options['flags']['blade']: 
                 self.add_subsystem('rlds_post',      RotorLoadsDeflStrainsWEIS(modeling_options = modeling_options, opt_options = opt_options))
 
                 # Connections from blade struct parametrization to rotor load anlysis
@@ -365,7 +371,7 @@ class WindPark(om.Group):
                 self.connect('xf.cm_interp_flaps',             'stall_check_of.airfoils_cm')
                 self.connect('aeroelastic.max_aoa',            'stall_check_of.aoa_along_span')
         
-            if  modeling_options["flags"]["nacelle"]:
+            if modeling_options["flags"]["nacelle"]:
                 self.add_subsystem('drivese_post',   DrivetrainSE(modeling_options=modeling_options))
 
             # TODO: FIX NDLC HERE
@@ -413,7 +419,7 @@ class WindPark(om.Group):
             self.connect('configuration.lifetime',          'aeroelastic.lifetime')
 
             if not modeling_options['OpenFAST']['from_openfast']:
-                self.connect('blade.outer_shape_bem.ref_axis',  'aeroelastic.ref_axis_blade')
+                self.connect('blade.high_level_blade_props.blade_ref_axis', 'aeroelastic.ref_axis_blade')
                 self.connect('configuration.rotor_orientation', 'aeroelastic.rotor_orientation')
                 self.connect("blade.high_level_blade_props.r_blade",  "aeroelastic.r")
                 self.connect('blade.outer_shape_bem.pitch_axis','aeroelastic.le_location')
@@ -429,7 +435,7 @@ class WindPark(om.Group):
                 self.connect('env.Hsig_wave',                    'aeroelastic.Hsig_wave')     # TODO: these depend on wind speed
                 self.connect('env.Tsig_wave',                    'aeroelastic.Tsig_wave')
                 #self.connect('env.beta_wave',                    'aeroelastic.beta_wave') # TODO: NEED ONTOLOGY INPUT HERE
-                self.connect("blade.high_level_blade_props.rotor_radius", "aeroelastic.Rtip")
+                self.connect("blade.high_level_blade_props.Rtip", "aeroelastic.Rtip")
                 self.connect('hub.radius',                      'aeroelastic.Rhub')
                 self.connect('hub.cone',                        'aeroelastic.cone')
                 self.connect('drivese.hub_system_mass',         'aeroelastic.hub_system_mass')
@@ -438,7 +444,6 @@ class WindPark(om.Group):
                 #self.connect('drivese_post.hub_system_cm',                    'aeroelastic.hub_system_cm')
                 self.connect('drivese.above_yaw_mass',          'aeroelastic.above_yaw_mass')
                 self.connect('drivese.yaw_mass',                'aeroelastic.yaw_mass')
-                self.connect('drivese.rna_I_TT',                'aeroelastic.rna_I_TT')
                 self.connect('drivese.above_yaw_I_TT',          'aeroelastic.nacelle_I_TT')
                 self.connect('drivese.above_yaw_cm',            'aeroelastic.nacelle_cm')
                 self.connect('drivese.generator_rotor_I',       'aeroelastic.GenIner', src_indices=[0])
@@ -528,38 +533,40 @@ class WindPark(om.Group):
                         self.connect('floating.transition_piece_mass',  'aeroelastic.transition_piece_mass')
                         self.connect('floatingse.transition_piece_I',      'aeroelastic.transition_piece_I', src_indices=[0,1,2])
                         
-                self.connect('airfoils.aoa',                    'aeroelastic.airfoils_aoa')
-                self.connect('airfoils.Re',                     'aeroelastic.airfoils_Re')
-                self.connect('xf.cl_interp_flaps',              'aeroelastic.airfoils_cl')
-                self.connect('xf.cd_interp_flaps',              'aeroelastic.airfoils_cd')
-                self.connect('xf.cm_interp_flaps',              'aeroelastic.airfoils_cm')
+                self.connect('airfoils.aoa', 'aeroelastic.airfoils_aoa')
+                self.connect('airfoils.Re', 'aeroelastic.airfoils_Re')
+                self.connect('xf.cl_interp_flaps', 'aeroelastic.airfoils_cl')
+                self.connect('xf.cd_interp_flaps', 'aeroelastic.airfoils_cd')
+                self.connect('xf.cm_interp_flaps', 'aeroelastic.airfoils_cm')
                 self.connect('blade.interp_airfoils.r_thick_interp', 'aeroelastic.rthick')
                 self.connect('blade.interp_airfoils.ac_interp', 'aeroelastic.ac')
-                self.connect('rotorse.rhoA',                    'aeroelastic.beam:rhoA')
-                self.connect('rotorse.EIxx',                    'aeroelastic.beam:EIxx')
-                self.connect('rotorse.EIyy',                    'aeroelastic.beam:EIyy')
-                self.connect('rotorse.rs.frame.flap_mode_shapes',       'aeroelastic.flap_mode_shapes')
-                self.connect('rotorse.rs.frame.edge_mode_shapes',       'aeroelastic.edge_mode_shapes')
-                self.connect('rotorse.rp.powercurve.V',                'aeroelastic.U')
-                self.connect('rotorse.rp.powercurve.Omega',            'aeroelastic.Omega')
-                self.connect('rotorse.rp.powercurve.pitch',            'aeroelastic.pitch')
-                self.connect('rotorse.rp.powercurve.V_R25',            'aeroelastic.V_R25')
-                self.connect('rotorse.rp.powercurve.rated_V',          'aeroelastic.Vrated')
+                self.connect('rotorse.EIxx', 'aeroelastic.blade:EIxx')
+                self.connect('rotorse.EIyy', 'aeroelastic.blade:EIyy')
+                self.connect('rotorse.rhoA', 'aeroelastic.blade:rhoA')
+                self.connect('rotorse.re.K', 'aeroelastic.blade:K')
+                self.connect('rotorse.re.I', 'aeroelastic.blade:I')
+                self.connect('rotorse.rs.frame.flap_mode_shapes', 'aeroelastic.blade:flap_mode_shapes')
+                self.connect('rotorse.rs.frame.edge_mode_shapes', 'aeroelastic.blade:edge_mode_shapes')
+                self.connect('rotorse.rp.powercurve.V', 'aeroelastic.U')
+                self.connect('rotorse.rp.powercurve.Omega', 'aeroelastic.Omega')
+                self.connect('rotorse.rp.powercurve.pitch', 'aeroelastic.pitch')
+                self.connect('rotorse.rp.powercurve.V_R25', 'aeroelastic.V_R25')
+                self.connect('rotorse.rp.powercurve.rated_V', 'aeroelastic.Vrated')
                 self.connect('rotorse.rp.powercurve.Ct_aero', 'aeroelastic.Ct_aero')
-                self.connect('rotorse.rp.gust.V_gust',                 'aeroelastic.Vgust')
-                self.connect('rotorse.wt_class.V_extreme1',             'aeroelastic.V_extreme1')
-                self.connect('rotorse.wt_class.V_extreme50',            'aeroelastic.V_extreme50')
-                self.connect('rotorse.wt_class.V_mean',                 'aeroelastic.V_mean_iec')
-                self.connect('configuration.rated_power',       'aeroelastic.control_ratedPower')
-                self.connect('control.max_TS',                  'aeroelastic.control_maxTS')
-                self.connect('control.maxOmega',                'aeroelastic.control_maxOmega')
+                self.connect('rotorse.rp.gust.V_gust', 'aeroelastic.Vgust')
+                self.connect('rotorse.wt_class.V_extreme1', 'aeroelastic.V_extreme1')
+                self.connect('rotorse.wt_class.V_extreme50', 'aeroelastic.V_extreme50')
+                self.connect('rotorse.wt_class.V_mean', 'aeroelastic.V_mean_iec')
+                self.connect('configuration.rated_power', 'aeroelastic.control_ratedPower')
+                self.connect('control.max_TS', 'aeroelastic.control_maxTS')
+                self.connect('control.maxOmega', 'aeroelastic.control_maxOmega')
                 self.connect('sse_tune.aeroperf_tables.pitch_vector','aeroelastic.pitch_vector')
                 self.connect('sse_tune.aeroperf_tables.tsr_vector', 'aeroelastic.tsr_vector')
                 self.connect('sse_tune.aeroperf_tables.U_vector', 'aeroelastic.U_vector')
-                self.connect('sse_tune.aeroperf_tables.Cp',     'aeroelastic.Cp_aero_table')
-                self.connect('sse_tune.aeroperf_tables.Ct',     'aeroelastic.Ct_aero_table')
-                self.connect('sse_tune.aeroperf_tables.Cq',     'aeroelastic.Cq_aero_table')
-                self.connect('xf.flap_angles',                  'aeroelastic.airfoils_UserProp')
+                self.connect('sse_tune.aeroperf_tables.Cp', 'aeroelastic.Cp_aero_table')
+                self.connect('sse_tune.aeroperf_tables.Ct', 'aeroelastic.Ct_aero_table')
+                self.connect('sse_tune.aeroperf_tables.Cq', 'aeroelastic.Cq_aero_table')
+                self.connect('xf.flap_angles', 'aeroelastic.airfoils_UserProp')
 
                 if modeling_options['flags']['mooring']:
                     self.connect("mooring.line_diameter", "aeroelastic.line_diameter")
@@ -578,27 +585,29 @@ class WindPark(om.Group):
                     self.connect("mooring.node_names", "aeroelastic.node_names")
             
                 # For fatigue
-                self.connect('blade.fatigue.sparU_sigma_ult', 'aeroelastic.blade_sparU_ultstress')
-                self.connect('blade.fatigue.sparU_wohlerexp', 'aeroelastic.blade_sparU_wohlerexp')
-                self.connect('blade.fatigue.sparU_wohlerA', 'aeroelastic.blade_sparU_wohlerA')
-                self.connect('blade.fatigue.sparL_sigma_ult', 'aeroelastic.blade_sparL_ultstress')
-                self.connect('blade.fatigue.sparL_wohlerexp', 'aeroelastic.blade_sparL_wohlerexp')
-                self.connect('blade.fatigue.sparL_wohlerA', 'aeroelastic.blade_sparL_wohlerA')
-                self.connect('blade.fatigue.teU_sigma_ult', 'aeroelastic.blade_teU_ultstress')
-                self.connect('blade.fatigue.teU_wohlerexp', 'aeroelastic.blade_teU_wohlerexp')
-                self.connect('blade.fatigue.teU_wohlerA', 'aeroelastic.blade_teU_wohlerA')
-                self.connect('blade.fatigue.teL_sigma_ult', 'aeroelastic.blade_teL_ultstress')
-                self.connect('blade.fatigue.teL_wohlerexp', 'aeroelastic.blade_teL_wohlerexp')
-                self.connect('blade.fatigue.teL_wohlerA', 'aeroelastic.blade_teL_wohlerA')
-                self.connect('rotorse.rs.strains.axial_root_sparU_load2stress', 'aeroelastic.blade_root_sparU_load2stress')
-                self.connect('rotorse.rs.strains.axial_root_sparL_load2stress', 'aeroelastic.blade_root_sparL_load2stress')
-                self.connect('rotorse.rs.strains.axial_maxc_teU_load2stress', 'aeroelastic.blade_maxc_teU_load2stress')
-                self.connect('rotorse.rs.strains.axial_maxc_teL_load2stress', 'aeroelastic.blade_maxc_teL_load2stress')
-                self.connect('drivese.lss_wohler_exp', 'aeroelastic.lss_wohlerexp')
-                self.connect('drivese.lss_wohler_A', 'aeroelastic.lss_wohlerA')
-                self.connect('drivese.lss_Xt', 'aeroelastic.lss_ultstress')
-                self.connect('drivese.lss_axial_load2stress', 'aeroelastic.lss_axial_load2stress')
-                self.connect('drivese.lss_shear_load2stress', 'aeroelastic.lss_shear_load2stress')
+                if modeling_options['flags']['blade']:
+                    self.connect('blade.fatigue.sparU_sigma_ult', 'aeroelastic.blade_sparU_ultstress')
+                    self.connect('blade.fatigue.sparU_wohlerexp', 'aeroelastic.blade_sparU_wohlerexp')
+                    self.connect('blade.fatigue.sparU_wohlerA', 'aeroelastic.blade_sparU_wohlerA')
+                    self.connect('blade.fatigue.sparL_sigma_ult', 'aeroelastic.blade_sparL_ultstress')
+                    self.connect('blade.fatigue.sparL_wohlerexp', 'aeroelastic.blade_sparL_wohlerexp')
+                    self.connect('blade.fatigue.sparL_wohlerA', 'aeroelastic.blade_sparL_wohlerA')
+                    self.connect('blade.fatigue.teU_sigma_ult', 'aeroelastic.blade_teU_ultstress')
+                    self.connect('blade.fatigue.teU_wohlerexp', 'aeroelastic.blade_teU_wohlerexp')
+                    self.connect('blade.fatigue.teU_wohlerA', 'aeroelastic.blade_teU_wohlerA')
+                    self.connect('blade.fatigue.teL_sigma_ult', 'aeroelastic.blade_teL_ultstress')
+                    self.connect('blade.fatigue.teL_wohlerexp', 'aeroelastic.blade_teL_wohlerexp')
+                    self.connect('blade.fatigue.teL_wohlerA', 'aeroelastic.blade_teL_wohlerA')
+                    self.connect('rotorse.rs.strains.axial_root_sparU_load2stress', 'aeroelastic.blade_root_sparU_load2stress')
+                    self.connect('rotorse.rs.strains.axial_root_sparL_load2stress', 'aeroelastic.blade_root_sparL_load2stress')
+                    self.connect('rotorse.rs.strains.axial_maxc_teU_load2stress', 'aeroelastic.blade_maxc_teU_load2stress')
+                    self.connect('rotorse.rs.strains.axial_maxc_teL_load2stress', 'aeroelastic.blade_maxc_teL_load2stress')
+                if modeling_options['flags']['nacelle']:
+                    self.connect('drivese.lss_wohler_exp', 'aeroelastic.lss_wohlerexp')
+                    self.connect('drivese.lss_wohler_A', 'aeroelastic.lss_wohlerA')
+                    self.connect('drivese.lss_Xt', 'aeroelastic.lss_ultstress')
+                    self.connect('drivese.lss_axial_load2stress', 'aeroelastic.lss_axial_load2stress')
+                    self.connect('drivese.lss_shear_load2stress', 'aeroelastic.lss_shear_load2stress')
                 if modeling_options["flags"]["tower"]:
                     self.connect('towerse.member.wohler_exp', 'aeroelastic.tower_wohlerexp')
                     self.connect('towerse.member.wohler_A', 'aeroelastic.tower_wohlerA')
@@ -640,7 +649,7 @@ class WindPark(om.Group):
                 self.connect("blade.internal_structure_2d_fem.layer_end_nd", "rlds_post.brs.layer_end_nd")
 
                 # Connections to DriveSE
-                if modeling_options['WISDEM']['DriveSE']['flag']:
+                if modeling_options['flags']['nacelle']:
                     self.connect('hub.diameter'                    , 'drivese_post.hub_diameter')
                     self.connect('hub.hub_in2out_circ'             , 'drivese_post.hub_in2out_circ')
                     self.connect('hub.flange_t2shell_t'            , 'drivese_post.flange_t2shell_t')
@@ -671,7 +680,7 @@ class WindPark(om.Group):
 
                     self.connect('nacelle.distance_hub_mb',           'drivese_post.L_h1')
                     self.connect('nacelle.distance_mb_mb',            'drivese_post.L_12')
-                    self.connect('nacelle.L_generator',               'drivese_post.L_generator')
+                    self.connect('generator.L_generator',             'drivese_post.L_generator')
                     self.connect('nacelle.overhang',                  'drivese_post.overhang')
                     self.connect('nacelle.distance_tt_hub',           'drivese_post.drive_height')
                     self.connect('nacelle.uptilt',                    'drivese_post.tilt')
@@ -783,7 +792,7 @@ class WindPark(om.Group):
                         self.connect('generator.C_Fes'        , 'drivese_post.generator.C_Fes')
                         self.connect('generator.C_PM'         , 'drivese_post.generator.C_PM')
 
-                        if modeling_options['WISDEM']['GeneratorSE']['type'] in ['pmsg_outer']:
+                        if modeling_options['WISDEM']['DriveSE']['generator']['type'] in ['pmsg_outer']:
                             self.connect('generator.N_c'          , 'drivese_post.generator.N_c')
                             self.connect('generator.b'            , 'drivese_post.generator.b')
                             self.connect('generator.c'            , 'drivese_post.generator.c')
@@ -801,13 +810,13 @@ class WindPark(om.Group):
                             self.connect('generator.B_tmax'       , 'drivese_post.generator.B_tmax')
                             self.connect('rotorse.rp.powercurve.rated_mech', 'drivese_post.generator.P_mech')
 
-                        if modeling_options['WISDEM']['GeneratorSE']['type'] in ['eesg','pmsg_arms','pmsg_disc']:
+                        if modeling_options['WISDEM']['DriveSE']['generator']['type'] in ['eesg','pmsg_arms','pmsg_disc']:
                             self.connect('generator.tau_p'        , 'drivese_post.generator.tau_p')
                             self.connect('generator.h_ys'         , 'drivese_post.generator.h_ys')
                             self.connect('generator.h_yr'         , 'drivese_post.generator.h_yr')
                             self.connect('generator.b_arm'        , 'drivese_post.generator.b_arm')
 
-                        elif modeling_options['WISDEM']['GeneratorSE']['type'] in ['scig','dfig']:
+                        elif modeling_options['WISDEM']['DriveSE']['generator']['type'] in ['scig','dfig']:
                             self.connect('generator.B_symax'      , 'drivese_post.generator.B_symax')
                             self.connect('generator.S_Nmax'      , 'drivese_post.generator.S_Nmax')
 
@@ -862,20 +871,20 @@ class WindPark(om.Group):
 					
                 # Connections to turbine constraints
                 self.connect('configuration.rotor_orientation', 'tcons_post.rotor_orientation')
-                self.connect('aeroelastic.max_TipDxc',          'tcons_post.tip_deflection')
-                self.connect("blade.high_level_blade_props.rotor_radius", "tcons_post.Rtip")
-                self.connect('blade.outer_shape_bem.ref_axis',  'tcons_post.ref_axis_blade')
-                self.connect('hub.cone',                        'tcons_post.precone')
-                self.connect('nacelle.uptilt',                  'tcons_post.tilt')
-                self.connect('nacelle.overhang',                'tcons_post.overhang')
-                self.connect('tower.ref_axis',                  'tcons_post.ref_axis_tower')
-                self.connect('tower.diameter',                  'tcons_post.outer_diameter_full')
+                self.connect('aeroelastic.max_TipDxc', 'tcons_post.tip_deflection')
+                self.connect("blade.high_level_blade_props.Rtip", "tcons_post.Rtip")
+                self.connect('blade.high_level_blade_props.blade_ref_axis',  'tcons_post.ref_axis_blade')
+                self.connect('hub.cone', 'tcons_post.precone')
+                self.connect('nacelle.uptilt', 'tcons_post.tilt')
+                self.connect('nacelle.overhang', 'tcons_post.overhang')
+                self.connect('tower.ref_axis', 'tcons_post.ref_axis_tower')
+                self.connect('tower.diameter', 'tcons_post.outer_diameter_full')
                 
             else:  # connections from outside WISDEM
-                self.connect('rosco_turbine.v_rated',               'aeroelastic.Vrated')
-                self.connect('rosco_turbine.R',                     'aeroelastic.Rtip')
-                self.connect('rosco_turbine.hub_height',            'aeroelastic.hub_height')
-                self.connect('rosco_turbine.twr_freq',              'sse_tune.tune_rosco.twr_freq')
+                self.connect('rosco_turbine.v_rated', 'aeroelastic.Vrated')
+                self.connect('rosco_turbine.R', 'aeroelastic.Rtip')
+                self.connect('rosco_turbine.hub_height', 'aeroelastic.hub_height')
+                self.connect('rosco_turbine.twr_freq', 'sse_tune.tune_rosco.twr_freq')
             
             # Inputs to plantfinancese from wt group
             if not modeling_options['OpenFAST']['from_openfast']:

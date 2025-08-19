@@ -21,7 +21,7 @@ class IEC_CoherentGusts():
         else:
             self.Lambda_1 = 0.7*self.HH
 
-        wind_file_name = os.path.join(dir, base_name + '_' + dlc.IEC_WindType + '_U%1.6f'%dlc.URef +  '_D%s'%dlc.direction_pn + '_S%s'%dlc.shear_hv + '.wnd')
+        wind_file_name = os.path.join(dir, base_name + '_' + dlc.IEC_WindType + '_U%1.6f'%dlc.URef +  '_D%s'%dlc.direction_pn + '_S%s'%dlc.shear_hv + '_W%s'%dlc.gust_wait_time +  '.wnd')
 
         if dlc.IEC_WindType.split('-')[-1] == 'EOG':
             self.EOG(dlc, wind_file_name)
@@ -229,6 +229,56 @@ class IEC_CoherentGusts():
         # Header
         hd = '! EWS gust, wind speed = ' + str(dlc.URef) + ', direction ' + dlc.direction_pn + ', shear ' + dlc.shear_hv
         self.write_wnd(wind_file_name, data, hd)
+    
+    def Ramp(self, dlc, wind_file_name):
+        # Ramp
+
+        T = dlc.total_time - dlc.transient_time
+        t = np.linspace(0., dlc.ramp_duration, 2)
+
+        # Contant variables
+        V = np.linspace(dlc.wind_speed,dlc.wind_speed+dlc.ramp_speeddelta,2)
+        V_dir = np.zeros_like(t)
+        V_vert = np.zeros_like(t)
+        shear_horz = np.zeros_like(t)
+        shear_vert = np.zeros_like(t)
+        shear_vert_lin = np.zeros_like(t)
+        V_gust = np.zeros_like(t)
+        upflow = np.zeros_like(t)
+
+        
+        data = np.column_stack((t, V, V_dir, V_vert, shear_horz, shear_vert, shear_vert_lin, V_gust, upflow))
+        # Header
+        hd = f'! Ramp wind starting from wind speed = {dlc.URef} to wind speed = {dlc.wind_speed+dlc.ramp_speeddelta}\n'
+        self.write_wnd(wind_file_name, data, hd)
+
+    def Step(self, dlc, wind_file_name):
+        # Step
+
+        T = dlc.total_time - dlc.transient_time
+        t = np.linspace(0., self.dt, 2)
+
+        # Contant variables
+        V = np.linspace(dlc.wind_speed,dlc.wind_speed+dlc.step_speeddelta,2)
+        V_dir = np.zeros_like(t)
+        V_vert = np.zeros_like(t)
+        shear_horz = np.zeros_like(t)
+        shear_vert = np.zeros_like(t)
+        shear_vert_lin = np.zeros_like(t)
+        V_gust = np.zeros_like(t)
+        upflow = np.zeros_like(t)
+
+        
+        data = np.column_stack((t, V, V_dir, V_vert, shear_horz, shear_vert, shear_vert_lin, V_gust, upflow))
+        # Header
+        hd = f'! Step wind starting from wind speed = {dlc.URef} to wind speed = {dlc.wind_speed+dlc.step_speeddelta}\n'
+        self.write_wnd(wind_file_name, data, hd)
+
+    def read_wnd(self, wnd_file):
+        """
+        Reads wnd file and returns data array of size (nt, 9).
+        """
+        return np.genfromtxt(wnd_file, comments="!")
 
     def Ramp(self, dlc, wind_file_name):
         # Ramp
@@ -291,7 +341,7 @@ class IEC_CoherentGusts():
             data[0,0] = self.T0
 
         # Add a line after, only if TF is different than time in the last line of data
-        if data[-1,0] != self.TF:
+        if data[-1,0] < self.TF:
             data = np.vstack((data, data[-1,:]))
             data[-1,0] = self.TF
 

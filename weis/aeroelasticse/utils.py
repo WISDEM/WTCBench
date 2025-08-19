@@ -1,7 +1,7 @@
 from openmdao.api import Group, ExplicitComponent
 from wisdem.rotorse.rotor_structure import ComputeStrains, DesignConstraints, BladeRootSizing
 from openfast_io.turbsim_util import TurbsimReader, TurbsimWriter
-from weis.aeroelasticse.FAST_wrapper import Turbsim_wrapper 
+from weis.aeroelasticse.FAST_wrapper import Turbsim_wrapper
 from weis.aeroelasticse.IEC_CoeherentGusts import IEC_CoherentGusts
 import numpy as np
 import os
@@ -517,6 +517,13 @@ class ModesElastoDyn(ExplicitComponent):
 def generate_wind_files(dlc_generator, FAST_namingOut, wind_directory, rotorD, hub_height, turbsim_exe, i_case):
 
     if dlc_generator.cases[i_case].turbulent_wind:
+        # If IEC_WindType is Turbulent-<Gust>, create a temporary NTM turbulent file to be used to add turbulence to gust later
+        Turbulent_Gust = False
+        if dlc_generator.cases[i_case].IEC_WindType.split('-')[0] == 'Turbulent':
+            Turbulent_Gust = True
+            actualwindtype = dlc_generator.cases[i_case].IEC_WindType
+            dlc_generator.cases[i_case].IEC_WindType = 'NTM'
+
         # Write out turbsim input file
         
         # If IEC_WindType is Turbulent-<Gust>, create a temporary NTM turbulent file to be used to add turbulence to gust later
@@ -566,18 +573,18 @@ def generate_wind_files(dlc_generator, FAST_namingOut, wind_directory, rotorD, h
         
         # If IEC_WindType is Turbulent-<Gust>, switch IEC_WindType variable back to original wind type
         if Turbulent_Gust:
-                dlc_generator.cases[i_case].IEC_WindType = actualwindtype
+            dlc_generator.cases[i_case].IEC_WindType = actualwindtype
 
     if not dlc_generator.cases[i_case].turbulent_wind or dlc_generator.cases[i_case].IEC_WindType.split('-')[0]=='Turbulent':
-        if dlc_generator.cases[i_case].IEC_WindType == 'Steady':
+        if dlc_generator.cases[i_case].IEC_WindType.split('-')[-1] in ('NWP','Steady'):
             wind_file_type = 1
             wind_file_path_InflowWind = 'unused'
         else:
-            gusts = IEC_CoherentGusts() # This includes ramp wind
+            gusts = IEC_CoherentGusts()
             gusts.D = rotorD
             gusts.HH = hub_height
             gusts.dt = dlc_generator.cases[i_case].TimeStep
-            gusts.TStart = dlc_generator.cases[i_case].transient_time + dlc_generator.cases[i_case].gust_wait_time  # start gust some time after OpenFAST starts recording
+            gusts.TStart = dlc_generator.cases[i_case].transient_time + dlc_generator.cases[i_case].gust_wait_time 
             gusts.TF = dlc_generator.cases[i_case].total_time
             gusts.Vert_Slope = dlc_generator.cases[i_case].VFlowAng
             wind_file_name = gusts.execute(wind_directory, FAST_namingOut, dlc_generator.cases[i_case])
@@ -597,5 +604,5 @@ def generate_wind_files(dlc_generator, FAST_namingOut, wind_directory, rotorD, h
                 wind_file_type = 3
             else:
                 wind_file_type = 2
-
-    return wind_file_type, wind_file_path_InflowWind
+    wind_file_plexp = dlc_generator.cases[i_case].PLExp_windtype1
+    return wind_file_type, wind_file_plexp, wind_file_path_InflowWind
