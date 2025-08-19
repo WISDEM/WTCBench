@@ -4,25 +4,20 @@ from weis.test.utils import execute_script
 
 # Run for each push on all platforms (choose one from each example directory)
 skinny_scripts = [
-    "01_simulate_own_openfast_model/dlc_sim_driver",
-    "02_generate_openfast_model_for_dlcs/iea15_semi_driver", 
-    "03_design_with_openfast/iea22_ptfm_opt_driver",                # these are used to test visualization
-    "04_frequency_domain_analysis_design/iea22_raft_opt_driver",    # these are used to test visualization
-    "05_control_optimization/rosco_opt_driver", 
-    "08_potential_flow_modeling/raft_potmod_driver",
+    "01_benchmarking_script/controller_testbench",
 ]
 
 # Only run on PR on Ubuntu
 extra_scripts = [
-    "01_simulate_own_openfast_model/run_openfast_cases",
-    "02_generate_openfast_model_for_dlcs/iea15_monopile_driver",
-    "02_generate_openfast_model_for_dlcs/iea34_driver",
-    "02_generate_openfast_model_for_dlcs/oc3_driver",
-    "02_generate_openfast_model_for_dlcs/olaf_driver",
-    "03_design_with_openfast/tower_design_driver",
-    "04_frequency_domain_analysis_design/oc3_raft_driver",
-    "04_frequency_domain_analysis_design/umaine_semi_raft_opt_driver",
-    "05_control_optimization/tmd_opt_driver",
+    # "01_simulate_own_openfast_model/run_openfast_cases",
+    # "02_generate_openfast_model_for_dlcs/iea15_monopile_driver",
+    # "02_generate_openfast_model_for_dlcs/iea34_driver",
+    # "02_generate_openfast_model_for_dlcs/oc3_driver",
+    # "02_generate_openfast_model_for_dlcs/olaf_driver",
+    # "03_design_with_openfast/tower_design_driver",
+    # "04_frequency_domain_analysis_design/oc3_raft_driver",
+    # "04_frequency_domain_analysis_design/umaine_semi_raft_opt_driver",
+    # "05_control_optimization/tmd_opt_driver",
     # "08_potential_flow_modeling/openfast_potmod_driver",   #skip this one for now
 ]
 

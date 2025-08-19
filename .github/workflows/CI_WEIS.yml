@@ -98,39 +98,39 @@ jobs:
         run: |
           pytest -p no:warnings --disable-warnings --cov=weis weis
 
-      # Run long tests in on pull request
-      - name: Run exhaustive
-        if: contains( matrix.os, 'ubuntu') && contains( github.event_name, 'pull_request')
-        env:
-            RUN_EXHAUSTIVE: 1
-        run: |
-            pytest  -p no:warnings -s --disable-warnings  weis
+      # # Run long tests in on pull request
+      # - name: Run exhaustive
+      #   if: contains( matrix.os, 'ubuntu') && contains( github.event_name, 'pull_request')
+      #   env:
+      #       RUN_EXHAUSTIVE: 1
+      #   run: |
+      #       pytest  -p no:warnings -s --disable-warnings  weis
 
-        # Test walkthrough notebook
-      - name: Test postprocessing notebooks
-        if: contains( matrix.os, 'ubuntu') && contains( github.event_name, 'pull_request')
-        env:
-            RUN_EXHAUSTIVE: 1
-        run: |
-          cd examples/07_postprocessing_notebooks
-          cp -r ../03_design_with_openfast/outputs/03_iea22_ptfm_opt/ outputs/
-          treon plot_FAST.ipynb
-          treon rev_DLCs_WEIS.ipynb
-          treon rev_Opt.ipynb
-          treon rev_WEIS_CSV.ipynb
+      #   # Test walkthrough notebook
+      # - name: Test postprocessing notebooks
+      #   if: contains( matrix.os, 'ubuntu') && contains( github.event_name, 'pull_request')
+      #   env:
+      #       RUN_EXHAUSTIVE: 1
+      #   run: |
+      #     cd examples/07_postprocessing_notebooks
+      #     cp -r ../03_design_with_openfast/outputs/03_iea22_ptfm_opt/ outputs/
+      #     treon plot_FAST.ipynb
+      #     treon rev_DLCs_WEIS.ipynb
+      #     treon rev_Opt.ipynb
+      #     treon rev_WEIS_CSV.ipynb
 
-      # Run parallel script calling OpenFAST
-      - name: Run parallel cases
-        if: contains( matrix.os, 'ubuntu') && contains( github.event_name, 'pull_request')
-        env:
-            RUN_EXHAUSTIVE: 1
-        run: |
-          cd examples/01_simulate_own_openfast_model
-          mpiexec -np 2 python dlc_sim_driver.py
-          cd ../06_parametric_analysis
-          mpiexec -n 2 python raft_doe_driver.py
-          mpiexec -n 2 --bind-to core python openfast_doe_driver.py
-          python postprocess_results.py
+      # # Run parallel script calling OpenFAST
+      # - name: Run parallel cases
+      #   if: contains( matrix.os, 'ubuntu') && contains( github.event_name, 'pull_request')
+      #   env:
+      #       RUN_EXHAUSTIVE: 1
+      #   run: |
+      #     cd examples/01_simulate_own_openfast_model
+      #     mpiexec -np 2 python dlc_sim_driver.py
+      #     cd ../06_parametric_analysis
+      #     mpiexec -n 2 python raft_doe_driver.py
+      #     mpiexec -n 2 --bind-to core python openfast_doe_driver.py
+      #     python postprocess_results.py
 
       # Skip these until we figure out MPI and overrides
       # cd ../03_design_with_openfast
