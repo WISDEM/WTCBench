@@ -748,6 +748,8 @@ class DLCGenerator(object):
         else: # default
             dlc_options['yaw_misalign'] = [0]*len(dlc_options['azimuth_init'])
 
+        # Set default wind speed to rated wind speed according to IEC 61400
+        dlc_options['wind_speed'] = dlc_options.get('wind_speed',[self.ws_rated-2,self.ws_rated,self.ws_rated+2])
 
         # DLC-specific: define groups
         # These options should be the same length and we will generate a matrix of all cases
