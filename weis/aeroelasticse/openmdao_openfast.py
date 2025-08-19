@@ -2147,12 +2147,13 @@ class FASTLoadCases(ExplicitComponent):
                 # Unpack outputs
                 for i_case, p_output in enumerate(p_outputs):
                     WindFile_type[i_case] = p_output[0]
-                    WindFile_name[i_case] = p_output[1]
+                    WindFile_plexp[i_case] = p_output[1]
+                    WindFile_name[i_case] = p_output[2]
 
             else:
                 # Generate wind in serial
                 for i_case in range(dlc_generator.n_cases):
-                    WindFile_type[i_case] , WindFile_name[i_case] = generate_wind_files(
+                    WindFile_type[i_case], WindFile_plexp[i_case], WindFile_name[i_case] = generate_wind_files(
                         dlc_generator, self.FAST_namingOut, self.wind_directory, rotorD, hub_height, self.turbsim_exe, i_case)
                 
         # Apply olaf settings, should be similar to above?
