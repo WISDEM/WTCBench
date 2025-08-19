@@ -30,7 +30,7 @@ def load_testbench_yaml(filename):
 def main():
 
 
-    input_file = 'testbench_options_lite_5MW.yaml'
+    input_file = 'testbench_options_lite.yaml'
     testbench_options = load_testbench_yaml(os.path.join(this_dir,input_file))
 
     #### NOTHING BELOW HERE SHOULD CHANGE FOR THE USER
