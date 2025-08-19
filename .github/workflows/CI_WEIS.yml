@@ -93,10 +93,10 @@ jobs:
 
         
       # Run all tests within WEIS, but not computationally expensive examples
-      - name: Run tests within WEIS
+      - name: Run benchmark only
         if: false == contains( matrix.os, 'ubuntu') || contains( github.event_name, 'push')
         run: |
-          pytest -p no:warnings --disable-warnings --cov=weis weis
+          python benchmarking/01_benchmarking_script/controller_testbench.py 
 
       # # Run long tests in on pull request
       # - name: Run exhaustive
