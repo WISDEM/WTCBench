@@ -93,7 +93,6 @@ openfast_input_map = {
     'yawfault_time': ("ServoDyn","TYawManS"),
     'yawfault_yawpos': ("ServoDyn","NacYawF"),
     
-    'ua_mod': ("AeroDyn","UA_Mod"),
     'wake_mod': ("AeroDyn","Wake_Mod"),
     'tau1_const': ("AeroDyn","tau1_const"),
     'ua_mod': ("AeroDyn","UA_Mod"),
@@ -794,10 +793,8 @@ class DLCGenerator(object):
             dlc_options['yaw_misalign'] = [0]*len(dlc_options['azimuth_init'])
         
         # Set default wind speed to rated wind speed according to IEC 61400
-        dlc_options['wind_speed'] = dlc_options.get('wind_speed',[self.ws_rated-2,self.ws_rated,self.ws_rated+2])
-
-        # Set default wind speed to rated wind speed according to IEC 61400
-        dlc_options['wind_speed'] = dlc_options.get('wind_speed',[self.ws_rated-2,self.ws_rated,self.ws_rated+2])
+        if not dlc_options['wind_speed']:  # default is []
+            dlc_options['wind_speed'] = [self.ws_rated-2,self.ws_rated,self.ws_rated+2]
 
         # DLC-specific: define groups
         # These options should be the same length and we will generate a matrix of all cases
