@@ -804,8 +804,14 @@ class FASTLoadCases(ExplicitComponent):
             if fst_vt['HydroDyn']:
                 fst_vt['HydroDyn']['AddF0'] = [[F0] for F0 in fst_vt['HydroDyn']['AddF0']]
 
-            if modopt['ROSCO']['flag']:
+            if modopt['ROSCO']['flag']: # ROSCO is tuned from a yaml
                 fst_vt['DISCON_in'] = modopt['General']['openfast_configuration']['fst_vt']['DISCON_in']
+            else:   
+                if 'DISCON_in' in modopt['General']['openfast_configuration']:
+                    # DISCON is provided by the user (Controls Tesbench)
+                    fst_vt['ServoDyn']['DLL_InFile'] = modopt['General']['openfast_configuration']['DISCON_in']
+                    fst_vt.pop('DISCON_in',None)    # Remove DISCON_in data struct so it's not written out as a new DISCON input
+                # else DISCON will be read from the OpenFAST input file set, do nothing
 
         #  Allow user-defined OpenFAST options to override WISDEM-generated ones
         #  Re-load modeling options without defaults to learn only what needs to change, has already been validated when first loaded
